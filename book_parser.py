@@ -27,6 +27,7 @@ def serialize_book(book_response, book_id, base_url):
     book['author'] = book_header[2]
     book['img'] = urljoin(base_url, soup.find(id='content').find('img')['src'])
     book['comments'] = [book_comment.text.split(')')[1] for book_comment in soup.find_all('div', class_='texts')]
+    book['genres'] = [book_genre.text for book_genre in soup.find('span', class_='d_book').find_all('a')]
 
     return book
 
