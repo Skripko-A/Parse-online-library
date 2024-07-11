@@ -49,3 +49,6 @@ python main.py -s <start_id> -e <end_id>
 ```sh
 python main.py -s 1 -e 10
 ```
+
+### Цель проекта
+Код написан в учебных целях — для курса по Python и веб-разработке на сайте Devman.
