@@ -10,6 +10,7 @@ def book_request(book_id):
     url = f'https://tululu.org/b{book_id}/'
     book_response = requests.get(url, allow_redirects=False)
     book_response.raise_for_status()
+    print('book_request')
     return book_response
 
 
@@ -25,6 +26,8 @@ def serialize_book(book_response, book_id, base_url):
     book['title'] = book_header[0]
     book['author'] = book_header[2]
     book['img'] = urljoin(base_url, soup.find(id='content').find('img')['src'])
+    book['comments'] = [book_comment.text.split(')')[1] for book_comment in soup.find_all('div', class_='texts')]
+
     return book
 
 
@@ -33,6 +36,7 @@ def book_download_request(book_id: int):
     payload = {'id': book_id}
     book_download_response = requests.get(url, params=payload, allow_redirects=False)
     book_download_response.raise_for_status()
+    print('book_download_request')
     return book_download_response
 
 
