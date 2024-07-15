@@ -189,7 +189,7 @@ def main():
     logging.basicConfig(level=logging.ERROR)
     parser = set_cli_args()
     cli_args = parser.parse_args()
-    base_url = 'https://tululu.org'
+    base_url = 'https://tululu.org/b'
     books_dir_name = Path('books')
     books_dir_name.mkdir(exist_ok=True)
     images_dir_name = Path('images')
@@ -201,7 +201,7 @@ def main():
             try:
                 book_response = request_for_book(book_id)
                 check_for_redirect(book_response)
-                book = serialize_book(book_response, book_id, base_url)
+                book = extract_book_details(book_response, book_id, base_url)
                 download_book(books_dir_name, book['title'], book_download_request(book_id), book['id'])
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
                 print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
