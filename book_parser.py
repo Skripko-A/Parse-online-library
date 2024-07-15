@@ -38,7 +38,7 @@ def set_cli_args():
     return parser
 
 
-def book_request(book_id: int):
+def request_for_book(book_id: int):
     """
     Выполняет HTTP-запрос к странице книги по заданному идентификатору книги.
 
@@ -57,7 +57,7 @@ def book_request(book_id: int):
         requests.exceptions.RequestException: В случае других ошибок запроса.
 
     Пример:
-        >>> response = book_request(1)
+        >>> response = request_for_book(1)
         >>> response.status_code
         200
     """
@@ -189,7 +189,7 @@ def main():
     first_book_id = cli_args.start_id
     last_book_id = cli_args.end_id
     for book_id in range(first_book_id, last_book_id + 1):
-        book_response = book_request(book_id)
+        book_response = request_for_book(book_id)
         try:
             check_for_redirect(book_response)
         except requests.HTTPError:
