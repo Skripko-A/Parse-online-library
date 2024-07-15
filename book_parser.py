@@ -89,7 +89,7 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def serialize_book(book_response, book_id: int, base_url: str) -> dict:
+def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
     """
     Собирает данные о книге из HTML-ответа в словарь.
 
