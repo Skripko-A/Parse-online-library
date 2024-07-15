@@ -112,7 +112,7 @@ def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
     return book
 
 
-def book_download_request(book_id: int):
+def request_for_book_download(book_id: int):
     """
     Отправляет запрос на скачивание книги по её идентификатору и возвращает HTTP-ответ.
 
@@ -202,8 +202,13 @@ def main():
                 book_response = request_for_book(book_id)
                 check_for_redirect(book_response)
                 book = extract_book_details(book_response, book_id, base_url)
-                download_book(books_dir_name, book['title'], book_download_request(book_id), book['id'])
+
+                book_download_response = request_for_book_download(book_id)
+                check_for_redirect(book_download_response)
+                download_book(books_dir_name, book['title'], book_download_response, book['id'])
+
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
+
                 print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
                 break
             except requests.ConnectionError:
