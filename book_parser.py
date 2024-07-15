@@ -197,7 +197,7 @@ def main():
         book = serialize_book(book_response, book_id, base_url)
         download_book(books_dir_name, book['title'], book_download_request(book_id), book['id'])
         download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
-        print(f'Название: {book['title']}\nАвтор: {book['author']}\n')
+        print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
 
 
 main()
