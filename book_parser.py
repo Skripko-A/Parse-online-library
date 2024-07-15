@@ -200,4 +200,5 @@ def main():
         print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
 
 
-main()
+if __name__ == '__main__':
+    main()
