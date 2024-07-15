@@ -1,10 +1,15 @@
 import os
+from time import sleep
 
 import requests
 from pathlib import Path
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlsplit
 import argparse
+import logging
+
+
+logger = logging.getLogger('logger')
 
 
 def set_cli_args():
@@ -62,8 +67,9 @@ def request_for_book(book_id: int):
         200
     """
     url = f'https://tululu.org/b{book_id}/'
-    book_response = requests.get(url, allow_redirects=False)
+    book_response = requests.get(url, allow_redirects=False, timeout=3)
     book_response.raise_for_status()
+    logger.info(f'Запрос страницы книги {book_id}')
     return book_response
 
 
@@ -121,8 +127,9 @@ def book_download_request(book_id: int):
     """
     url = 'https://tululu.org/txt.php'
     payload = {'id': book_id}
-    book_download_response = requests.get(url, params=payload, allow_redirects=False)
+    book_download_response = requests.get(url, params=payload, allow_redirects=False, timeout=3)
     book_download_response.raise_for_status()
+    logger.info(f'Загрузка книги {book_id}')
     return book_download_response
 
 
@@ -164,7 +171,7 @@ def download_book_cover(book_img_url_path: str, dir_name: Path, book_image_full_
         requests.HTTPError: Если запрос на получение изображения завершился с ошибкой.
         OSError: Если произошла ошибка при записи файла.
     """
-    response = requests.get(book_image_full_url)
+    response = requests.get(book_image_full_url, timeout=3)
     response.raise_for_status()
     filename = os.path.join(dir_name, book_img_url_path.split('/')[2])
     with open(filename, 'wb') as file:
@@ -179,6 +186,7 @@ def main():
     Функция создает необходимые директории, запрашивает информацию о книгах и скачивает их
     вместе с обложками в указанные директории.
     """
+    logging.basicConfig(level=logging.ERROR)
     parser = set_cli_args()
     cli_args = parser.parse_args()
     base_url = 'https://tululu.org'
@@ -189,15 +197,25 @@ def main():
     first_book_id = cli_args.start_id
     last_book_id = cli_args.end_id
     for book_id in range(first_book_id, last_book_id + 1):
-        book_response = request_for_book(book_id)
-        try:
-            check_for_redirect(book_response)
-        except requests.HTTPError:
+        while True:
+            try:
+                book_response = request_for_book(book_id)
+                check_for_redirect(book_response)
+                book = serialize_book(book_response, book_id, base_url)
+                download_book(books_dir_name, book['title'], book_download_request(book_id), book['id'])
+                download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
+                print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
+                break
+            except requests.ConnectionError:
+                logger.error("Ошибка подключения, проверьте доступ в интернет")
+                sleep(3)
+            except requests.Timeout:
+                logger.error('Время ожидания ответа превышено')
+            except requests.HTTPError:
+                logger.error("Страница с книгой не найдена, проверьте URL запроса, id-книги, "
+                             "возможно книги с таким id на сайте больше нет\n")
+                break
             continue
-        book = serialize_book(book_response, book_id, base_url)
-        download_book(books_dir_name, book['title'], book_download_request(book_id), book['id'])
-        download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
-        print(f"Название: {book['title']}\nАвтор: {book['author']}\n")
 
 
 if __name__ == '__main__':
