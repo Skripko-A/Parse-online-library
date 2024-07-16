@@ -191,7 +191,6 @@ def main():
     logging.basicConfig(level=logging.ERROR)
     parser = set_cli_args()
     cli_args = parser.parse_args()
-    base_url = 'https://tululu.org/b'
     books_dir_name = Path('books')
     books_dir_name.mkdir(exist_ok=True)
     images_dir_name = Path('images')
