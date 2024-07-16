@@ -190,7 +190,7 @@ def main():
                                                           log_message='Запрос страницы скачивания текста книги')
                 check_for_redirect(book_download_response,
                                    'На странице данной книги недоступен файл текста для скачивания\n')
-                download_book(books_dir_name, book['title'], book_download_response, book['id'])
+                save_book_text(books_dir_name, book['title'], book_download_response, book['id'])
 
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
 
