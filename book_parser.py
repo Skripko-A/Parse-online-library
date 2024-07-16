@@ -42,7 +42,7 @@ def set_cli_args():
     return parser
 
 
-def request_for_book(book_id: int):
+def request_for_book(url, params: dict, log_message: str):
     """
     Выполняет HTTP-запрос к странице книги по заданному идентификатору книги.
 
@@ -51,7 +51,9 @@ def request_for_book(book_id: int):
     функция вызывает исключение.
 
     Args:
-        book_id (int): Идентификатор книги.
+        url (str): Ардес страницы для запроса
+        params (dict): Параметры для запроса скачивания текста книги
+        log_message (str): Текст для информационного сообщения о том, что отправлен запрос
 
     Returns:
         requests.Response: Ответ сервера на HTTP-запрос.
@@ -65,10 +67,9 @@ def request_for_book(book_id: int):
         >>> response.status_code
         200
     """
-    url = f'https://tululu.org/b{book_id}/'
-    book_response = requests.get(url, allow_redirects=False, timeout=3)
+    book_response = requests.get(url, allow_redirects=False, timeout=3, params=params)
     book_response.raise_for_status()
-    logger.info(f'Запрос страницы книги {book_id}')
+    logger.info(log_message)
     return book_response
 
 
@@ -112,27 +113,6 @@ def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
         'genres': [book_genre.text for book_genre in soup.find('span', class_='d_book').find_all('a')]
     }
     return book
-
-
-def request_for_book_download(book_id: int):
-    """
-    Отправляет запрос на скачивание книги по её идентификатору и возвращает HTTP-ответ.
-
-    Args:
-        book_id (int): Идентификатор книги.
-
-    Returns:
-        requests.Response: HTTP-ответ на запрос скачивания книги.
-
-    Raises:
-        requests.exceptions.RequestException: Если запрос завершился неудачно.
-    """
-    url = 'https://tululu.org/txt.php'
-    payload = {'id': book_id}
-    book_download_response = requests.get(url, params=payload, allow_redirects=False, timeout=3)
-    book_download_response.raise_for_status()
-    logger.info(f'Загрузка книги {book_id}')
-    return book_download_response
 
 
 def download_book(dir_name: Path, book_title: str, response, book_id: int) -> str:
@@ -197,16 +177,19 @@ def main():
     images_dir_name.mkdir(exist_ok=True)
     first_book_id = cli_args.start_id
     last_book_id = cli_args.end_id
+    main_page_url = 'https://tululu.org/'
     for book_id in range(first_book_id, last_book_id + 1):
         while True:
             try:
-                book_response = request_for_book(book_id)
-                check_for_redirect(book_response, 'Страница книги с данным id не найдена')
+                book_response = request_for_book(url=f'{main_page_url}b{book_id}/', params=None,
+                                                 log_message='Запрос страницы книги')
+                check_for_redirect(book_response, 'Страница книги с данным id не найдена\n')
                 book = extract_book_details(book_response, book_id, book_response.url)
 
-                book_download_response = request_for_book_download(book_id)
+                book_download_response = request_for_book(url=f'{main_page_url}txt.php', params={'id': book_id},
+                                                          log_message='Запрос страницы скачивания текста книги')
                 check_for_redirect(book_download_response,
-                                   'На странице данной книги недоступен файл текста для скачивания')
+                                   'На странице данной книги недоступен файл текста для скачивания\n')
                 download_book(books_dir_name, book['title'], book_download_response, book['id'])
 
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
