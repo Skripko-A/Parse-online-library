@@ -115,7 +115,7 @@ def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
     return book
 
 
-def download_book(dir_name: Path, book_title: str, response, book_id: int) -> str:
+def save_book_text(dir_name: Path, book_title: str, response, book_id: int) -> str:
     """
     Сохраняет содержимое HTTP-ответа в файл.
 
