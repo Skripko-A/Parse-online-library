@@ -8,7 +8,6 @@ from urllib.parse import urljoin, urlsplit
 import argparse
 import logging
 
-
 logger = logging.getLogger('logger')
 
 
@@ -105,11 +104,13 @@ def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
     soup = BeautifulSoup(book_response.text, 'lxml')
 
     book_header = soup.find(id='content').find('h1').text.split('\xa0')
-    book = {'id': book_id, 'title': book_header[0],
-            'author': book_header[2],
-            'img': urljoin(base_url, soup.find(id='content').find('img')['src']),
-            'comments': [book_comment.text.split(')')[1] for book_comment in soup.find_all('div', class_='texts')],
-            'genres': [book_genre.text for book_genre in soup.find('span', class_='d_book').find_all('a')]}
+    book = {
+        'id': book_id, 'title': book_header[0],
+        'author': book_header[2],
+        'img': urljoin(base_url, soup.find(id='content').find('img')['src']),
+        'comments': [book_comment.text.split(')')[1] for book_comment in soup.find_all('div', class_='texts')],
+        'genres': [book_genre.text for book_genre in soup.find('span', class_='d_book').find_all('a')]
+    }
     return book
 
 
@@ -205,7 +206,8 @@ def main():
                 book = extract_book_details(book_response, book_id, base_url)
 
                 book_download_response = request_for_book_download(book_id)
-                check_for_redirect(book_download_response, 'На странице данной книги недоступен файл текста для скачивания')
+                check_for_redirect(book_download_response,
+                                   'На странице данной книги недоступен файл текста для скачивания')
                 download_book(books_dir_name, book['title'], book_download_response, book['id'])
 
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
