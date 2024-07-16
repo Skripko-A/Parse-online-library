@@ -107,7 +107,7 @@ def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
     book = {
         'id': book_id, 'title': book_header[0],
         'author': book_header[2],
-        'img': urljoin(base_url, soup.find(id='content').find('img')['src']),
+        'img': urljoin(book_response.url, soup.find(id='content').find('img')['src']),
         'comments': [book_comment.text.split(')')[1] for book_comment in soup.find_all('div', class_='texts')],
         'genres': [book_genre.text for book_genre in soup.find('span', class_='d_book').find_all('a')]
     }
@@ -203,7 +203,7 @@ def main():
             try:
                 book_response = request_for_book(book_id)
                 check_for_redirect(book_response, 'Страница книги с данным id не найдена')
-                book = extract_book_details(book_response, book_id, base_url)
+                book = extract_book_details(book_response, book_id, book_response.url)
 
                 book_download_response = request_for_book_download(book_id)
                 check_for_redirect(book_download_response,
