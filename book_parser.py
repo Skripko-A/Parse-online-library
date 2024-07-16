@@ -73,7 +73,7 @@ def request_for_book(book_id: int):
     return book_response
 
 
-def check_for_redirect(response):
+def check_for_redirect(response, book_error: str):
     """
     Проверяет, произошел ли редирект для данного ответа.
 
@@ -81,12 +81,13 @@ def check_for_redirect(response):
 
     Args:
         response (requests.Response): Объект ответа HTTP.
+        book_error (str): Текст ошибки для пользователя
 
     Raises:
-        requests.HTTPError: Если статус код ответа указывает на редирект.
+        Custom Error если по id не найдена страница книги или на странице книги не доступен файл текста книги для скачивания
     """
-    if 300 <= response.status_code < 400:
-        raise requests.HTTPError
+    if response.is_redirect:
+        raise ValueError(book_error)
 
 
 def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
@@ -200,11 +201,11 @@ def main():
         while True:
             try:
                 book_response = request_for_book(book_id)
-                check_for_redirect(book_response)
+                check_for_redirect(book_response, 'Страница книги с данным id не найдена')
                 book = extract_book_details(book_response, book_id, base_url)
 
                 book_download_response = request_for_book_download(book_id)
-                check_for_redirect(book_download_response)
+                check_for_redirect(book_download_response, 'На странице данной книги недоступен файл текста для скачивания')
                 download_book(books_dir_name, book['title'], book_download_response, book['id'])
 
                 download_book_cover(urlsplit(book['img'])[2], images_dir_name, book['img'])
@@ -216,9 +217,8 @@ def main():
                 sleep(3)
             except requests.Timeout:
                 logger.error('Время ожидания ответа превышено')
-            except requests.HTTPError:
-                logger.error("Страница с книгой не найдена, проверьте URL запроса, id-книги, "
-                             "возможно книги с таким id на сайте больше нет\n")
+            except ValueError as error:
+                logger.error(error)
                 break
             continue
 
