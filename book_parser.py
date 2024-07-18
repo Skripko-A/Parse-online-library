@@ -90,7 +90,7 @@ def check_for_redirect(response, book_error: str):
         raise ValueError(book_error)
 
 
-def extract_book_details(book_response, book_id: int, base_url: str) -> dict:
+def extract_book_details(book_response, book_id: int) -> dict:
     """
     Собирает данные о книге из HTML-ответа в словарь.
 
